@@ -277,9 +277,14 @@ specificity come from disjoint patient groups, the within-study
 covariance is exactly diagonal --- the within-study correlation that
 primary reports never provide is 0 *by design*, not a plug-in guess.
 
+The five toy studies below show the classic *threshold effect*: read
+across them and sensitivity is traded for specificity, so the
+between-study correlation of the two logits is negative --- which is
+exactly what gives a summary ROC curve its meaning.
+
 ```{r dta}
-tp <- c(80, 60, 90, 45, 30); fn <- c(20, 15, 10,  5,  4)
-fp <- c(10, 25,  5, 12,  8); tn <- c(90, 75, 95, 88, 92)
+tp <- c(96, 88, 85, 76, 70); fn <- c( 4, 12, 15, 24, 30)
+fp <- c(28, 20, 14,  9,  5); tn <- c(72, 80, 86, 91, 95)
 
 dta <- igmi_dta_studies(tp = tp, fn = fn, fp = fp, tn = tn)
 dta_studies <- lapply(dta, function(s) igmi_gaussian(s$theta, s$Sigma))
