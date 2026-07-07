@@ -1,0 +1,37 @@
+Package: gtmeta
+Type: Package
+Title: Information-Geometric Tools for Meta-Analysis
+Version: 0.0.0.9000
+Authors@R:
+    person("Willem M.", "Otte", email = "w.m.otte@umcutrecht.nl",
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-1511-6834"))
+Description: Implements information-geometric meta-integration (IGMI) for
+    pooling study-level Gaussian evidence by Bures-Wasserstein,
+    Fisher-Rao, and Wasserstein-Fisher-Rao geometry. The package provides
+    constructors for univariate, multivariate, diagnostic-accuracy, and
+    prediction-model study objects; Bures-Wasserstein barycenters;
+    Fisher-Rao distances and Karcher checks; Frechet-variance
+    heterogeneity measures; exact and bootstrap inference tools;
+    robust Wasserstein-Fisher-Rao pooling; classical FE, RE, and UWLS
+    benchmarks; simulation generators; and Cochrane-style data adapters.
+License: GPL-3
+URL: https://github.com/wmotte/gtmeta
+BugReports: https://github.com/wmotte/gtmeta/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 4.1)
+Imports:
+    metafor,
+    stats,
+    utils
+Suggests:
+    mvmeta,
+    mada,
+    metamisc,
+    reticulate,
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0

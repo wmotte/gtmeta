@@ -1,0 +1,17 @@
+^\.github$
+^renv$
+^renv\.lock$
+^\.Rprofile$
+^math$
+^plans$
+^sim$
+^emp$
+^TODO\.md$
+^BACKGROUND\.md$
+^\.claude$
+^.*\.Rproj$
+^\.gitignore$
+^ms$
+^validate\.R$
+^LICENSE\.md$
+^\.DS_Store$
