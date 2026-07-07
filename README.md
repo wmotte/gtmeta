@@ -1,10 +1,15 @@
 # gtmeta
 
+> **Vignette:** [An information-geometric tour of meta-analysis](https://wmotte.github.io/gtmeta/) --
+> a worked, executable tour of the package: pooling as a barycenter, heterogeneity,
+> exact inference, diagnostic accuracy with the SROC curve, and the robust
+> Wasserstein-Fisher-Rao pool.
+
 `gtmeta` is an R package for information-geometric meta-analysis. It represents a study as an estimated Gaussian sampling distribution and pools studies with Bures-Wasserstein, Fisher-Rao, or Wasserstein-Fisher-Rao geometry. The package also contains classical FE, RE, and UWLS benchmarks, simulation helpers, theorem-anchored tests, and adapters for Cochrane-style extracted estimates.
 
 The package is deliberately conservative: geometric estimators are checked against familiar meta-analytic limits where those limits exist. In the scalar fixed-variance case, the Bures-Wasserstein mean reduces to the fixed-effect estimator; the Frechet-variance calibration recovers standard heterogeneity quantities; and the Wasserstein-Fisher-Rao pool gives a robust redescending estimator with a transparent cutoff.
 
-A worked tour of the package -- pooling, heterogeneity, inference, diagnostic accuracy, and robustness -- is in the vignette, also rendered as a standalone site at <https://wmotte.github.io/gtmeta/>. Rebuild it locally with `Rscript docs/build.R`.
+The vignette linked above ships with the package (`vignette("igmi-tour")`) and is rebuilt as a standalone site with `Rscript docs/build.R`.
 
 <p align="center">
   <img src="man/figures/graphical_abstract.png" alt="Meta-analysis as a barycenter of study distributions: each study is a Gaussian, the pooled estimate is their Frechet mean" width="420">
