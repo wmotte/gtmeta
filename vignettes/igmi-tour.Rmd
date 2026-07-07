@@ -1,0 +1,423 @@
+---
+title: "An information-geometric tour of meta-analysis"
+subtitle: "Pooling studies as a barycenter of Gaussians"
+author: "Willem M. Otte"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{An information-geometric tour of meta-analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE, comment = "#>",
+  fig.width = 7, fig.height = 4.5, out.width = "100%",
+  dpi = 130, fig.align = "center", dev = "png"
+)
+library(gtmeta)
+
+# IGMI design-system palette (matches the package graphical abstract):
+# studies are blue, the pooled barycenter green, robust/WFR violet,
+# classical comparators amber/aqua.
+igmi <- c(
+  green = "#1b774f", violet = "#6a45a4", blue = "#2f6fb0",
+  aqua  = "#2c978e", amber  = "#b3831c",
+  ink   = "#15211b", muted  = "#54635b", faint = "#7d8b82",
+  line  = "#e5e9e2", paper  = "#fbfcf9"
+)
+igmi_par <- function(mar = c(4.2, 4.4, 1.6, 1), mfrow = c(1, 1)) {
+  par(mfrow = mfrow, mar = mar, bg = igmi[["paper"]], fg = igmi[["ink"]],
+      col.axis = igmi[["muted"]], col.lab = igmi[["ink"]],
+      col.main = igmi[["ink"]], family = "serif",
+      las = 1, bty = "l", tcl = -0.3, mgp = c(2.6, 0.6, 0))
+}
+alpha <- function(col, a) {
+  rgb2 <- grDevices::col2rgb(col) / 255
+  grDevices::rgb(rgb2[1], rgb2[2], rgb2[3], alpha = a)
+}
+# contour of {x : (x - mu)' S^{-1} (x - mu) = r^2}
+ellipse_xy <- function(mu, S, r = 1, n = 120) {
+  a <- seq(0, 2 * pi, length.out = n)
+  sweep(cbind(cos(a), sin(a)) %*% chol(S) * r, 2, mu, "+")
+}
+```
+
+<style>
+#igmi-hero{margin:1.2em 0;border:1px solid var(--line,#e5e9e2);border-radius:5px;
+  padding:14px 16px 12px;background:var(--panel,#ffffff)}
+#igmi-hero svg{display:block;width:100%;height:auto}
+#igmi-hero .axis{stroke:var(--faint,#7d8b82);stroke-width:1;fill:none;opacity:.45}
+#igmi-hero .axis-lbl{fill:var(--faint,#7d8b82);font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:8.5px;letter-spacing:.1em;text-transform:uppercase}
+#igmi-hero .tline{stroke:var(--muted,#54635b);stroke-width:1;stroke-dasharray:2 3;opacity:.5}
+#igmi-hero .study{fill:var(--blue,#2f6fb0);fill-opacity:.10;stroke:var(--blue,#2f6fb0);stroke-width:1.6}
+#igmi-hero .study-dot{fill:var(--blue,#2f6fb0)}
+#igmi-hero .bary-ell{fill:var(--igmi,#1b774f);fill-opacity:.18;stroke:var(--igmi,#1b774f);stroke-width:2.4}
+#igmi-hero .bary-dot{fill:var(--igmi,#1b774f)}
+#igmi-hero .leader{stroke:var(--blue,#2f6fb0);stroke-width:1;opacity:.5}
+#igmi-hero .study-lbl{fill:var(--blue,#2f6fb0);font-family:Palatino,Georgia,serif;font-style:italic;font-size:15px}
+#igmi-hero .bary-sym{fill:var(--igmi,#1b774f);font-family:Palatino,Georgia,serif;font-style:italic;
+  font-size:22px;font-weight:600}
+#igmi-hero .bary-bar{stroke:var(--igmi,#1b774f);stroke-width:2;stroke-linecap:round}
+#igmi-hero .bary-cap{fill:var(--muted,#54635b);font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:9px;letter-spacing:.12em;text-transform:uppercase;text-anchor:middle}
+#igmi-hero .legend{display:flex;gap:1.4rem;flex-wrap:wrap;margin-top:.7rem;font-size:.82rem;
+  color:var(--muted,#54635b)}
+#igmi-hero .legend span{display:inline-flex;align-items:center;gap:.5rem}
+#igmi-hero .swatch{width:22px;height:14px;border-radius:8px;flex:0 0 auto;display:inline-block}
+#igmi-hero .swatch.study-sw{border:1.6px solid var(--blue,#2f6fb0);background:rgba(47,111,176,.12)}
+#igmi-hero .swatch.bary-sw{border:2px solid var(--igmi,#1b774f);background:rgba(27,119,79,.26)}
+.mathline{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;
+  color:var(--igmi,#1b774f);background:var(--panel-2,#f3f7f1);
+  border:1px solid var(--line,#e5e9e2);border-radius:4px;padding:.5rem .7rem;display:inline-block}
+.ov{text-decoration:overline}
+</style>
+
+## The barycenter idea
+
+`gtmeta` treats a meta-analysis as a problem in the geometry of
+distributions. Each study enters not as a point estimate plus a standard
+error, but as its whole estimated Gaussian sampling distribution
+N(&theta;<sub>i</sub>, &Sigma;<sub>i</sub>) --- a point on the manifold of
+Gaussians. The pooled result is the distribution that lies closest, on
+average, to all of them: a weighted average taken *on the curved space* of
+distributions, then read back as an effect and its uncertainty.
+
+<figure id="igmi-hero">
+<svg viewBox="0 0 440 272" role="img" aria-label="Five blue study distributions drawn as covariance ellipses, each labelled N sub i, joined by transport lines to a single green barycenter ellipse labelled N-bar at their weighted centre, in an outcome-1 by outcome-2 plane.">
+  <g>
+    <line class="axis" x1="44" y1="240" x2="412" y2="240"/>
+    <line class="axis" x1="44" y1="240" x2="44" y2="28"/>
+    <path class="axis" d="M412 240 l-6 -3.2 M412 240 l-6 3.2"/>
+    <path class="axis" d="M44 28 l-3.2 6 M44 28 l3.2 6"/>
+    <text class="axis-lbl" x="406" y="256" text-anchor="end">outcome 1</text>
+    <text class="axis-lbl" x="32" y="40" transform="rotate(-90 32 40)" text-anchor="end">outcome 2</text>
+  </g>
+  <g>
+    <line class="tline" x1="130" y1="95" x2="226" y2="131"/>
+    <line class="tline" x1="150" y1="180" x2="226" y2="131"/>
+    <line class="tline" x1="305" y1="88" x2="226" y2="131"/>
+    <line class="tline" x1="335" y1="170" x2="226" y2="131"/>
+  </g>
+  <g>
+    <ellipse class="study" cx="130" cy="95"  rx="27" ry="15" transform="rotate(-22 130 95)"/>
+    <ellipse class="study" cx="150" cy="180" rx="20" ry="26" transform="rotate(14 150 180)"/>
+    <ellipse class="study" cx="305" cy="88"  rx="29" ry="17" transform="rotate(18 305 88)"/>
+    <ellipse class="study" cx="335" cy="170" rx="18" ry="22" transform="rotate(-14 335 170)"/>
+    <circle class="study-dot" cx="130" cy="95"  r="2.4"/>
+    <circle class="study-dot" cx="150" cy="180" r="2.4"/>
+    <circle class="study-dot" cx="305" cy="88"  r="2.4"/>
+    <circle class="study-dot" cx="335" cy="170" r="2.4"/>
+  </g>
+  <ellipse class="bary-ell" cx="226" cy="131" rx="31" ry="22" transform="rotate(8 226 131)"/>
+  <circle class="bary-dot" cx="226" cy="131" r="3.4"/>
+  <line class="leader" x1="96" y1="66" x2="116" y2="84"/>
+  <text class="study-lbl" x="72" y="64">N<tspan dy="5" font-size="10">i</tspan></text>
+  <g transform="translate(266,124)">
+    <text class="bary-sym" x="0" y="0">N</text>
+    <line class="bary-bar" x1="0.5" y1="-16.5" x2="15" y2="-16.5"/>
+  </g>
+  <text class="bary-cap" x="272" y="145">barycenter</text>
+</svg>
+<div class="legend">
+  <span><i class="swatch study-sw"></i> N<sub>i</sub> = N(&theta;<sub>i</sub>, &Sigma;<sub>i</sub>) &middot; one study</span>
+  <span><i class="swatch bary-sw"></i> <span class="ov">N</span> &middot; barycenter (pooled estimate)</span>
+</div>
+</figure>
+
+<p class="mathline"><span class="ov">N</span> = arg&nbsp;min<sub>N</sub> &sum; w<sub>i</sub>&nbsp;d(N,&nbsp;N<sub>i</sub>)&sup2;</p>
+
+The geometry --- the distance d --- is an explicit modelling choice.
+`gtmeta` implements three: **Bures--Wasserstein** (optimal transport; the
+closed-form default), **Fisher--Rao** (information geometry), and
+**Wasserstein--Fisher--Rao** (unbalanced transport, which yields a robust
+pool). The package is deliberately conservative: wherever a classical
+meta-analytic limit exists, the geometric estimator is proven --- and
+tested --- to reduce to it exactly. This vignette walks that tour:
+pooling, heterogeneity, inference, diagnostic accuracy, and robustness.
+
+## Univariate quickstart
+
+A study with estimate `yi` and standard error `sei` is the Gaussian
+N(yi, sei^2). `igmi_studies()` builds the study objects,
+`igmi_precision_weights()` the usual inverse-variance weights, and
+`bw_barycenter()` the Bures--Wasserstein Frechet mean by fixed-point
+iteration.
+
+```{r quickstart}
+yi  <- c(0.12, -0.30, 0.25, 0.05, 0.40, -0.10)
+sei <- c(0.10,  0.25, 0.15, 0.30, 0.20,  0.12)
+
+studies <- igmi_studies(yi = yi, sei = sei)
+w       <- igmi_precision_weights(studies)
+
+fit <- bw_barycenter(studies, weights = w)
+c(theta = fit$theta, Sigma = fit$Sigma,
+  iterations = fit$iterations, converged = fit$converged)
+```
+
+In this scalar case the barycenter mean *is* the fixed-effect estimate ---
+nothing familiar is lost. The pooled `Sigma` is the (weighted) barycenter
+of the study variances, not the variance of the pooled mean; inference
+comes later. The underlying distance is available directly:
+
+```{r bwdist}
+bw_dist2(studies[[1]], studies[[2]])
+```
+
+```{r fig-forest, echo = FALSE, fig.height = 3.8, fig.alt = "Forest-style plot: six blue study intervals and the green pooled barycenter estimate below them."}
+igmi_par(mar = c(4.2, 6.4, 1.6, 1))
+K <- length(yi)
+lo <- yi - 1.96 * sei; hi <- yi + 1.96 * sei
+ys <- K:1
+plot(NA, xlim = range(lo, hi, 0), ylim = c(-0.6, K + 0.4),
+     xlab = "effect size", ylab = "", yaxt = "n")
+axis(2, at = ys, labels = paste("study", 1:K), tick = FALSE,
+     col.axis = igmi[["muted"]], cex.axis = 0.9)
+abline(v = 0, col = igmi[["line"]], lwd = 1.2)
+segments(lo, ys, hi, ys, col = igmi[["blue"]], lwd = 2)
+points(yi, ys, pch = 16, col = igmi[["blue"]], cex = 1.1)
+se_bar <- sqrt(1 / sum(1 / sei^2))
+polygon(fit$theta + c(-1.96, 0, 1.96, 0) * se_bar, c(0, 0.28, 0, -0.28),
+        col = alpha(igmi[["green"]], 0.35), border = igmi[["green"]], lwd = 2)
+axis(2, at = 0, labels = "barycenter", tick = FALSE,
+     col.axis = igmi[["green"]], cex.axis = 0.9, font = 2)
+```
+
+## Heterogeneity: nothing familiar is lost
+
+The Frechet variance --- the minimised objective at the barycenter ---
+decomposes exactly into a **location** part (spread of the means) and a
+**scale** part (spread of the covariances):
+
+```{r frechet-variance}
+fv <- frechet_variance(studies, w)
+c(V_F = fv$V_F, V_loc = fv$V_loc, V_scale = fv$V_scale)
+```
+
+Calibrating the location part against its known distribution under
+homogeneity gives the IGMI heterogeneity index `I_F2` and a trace
+method-of-moments estimator `tr_T_hat` of the between-study variance.
+In the scalar case these are not analogues of the classical quantities;
+they are *identical* to them:
+
+```{r heterogeneity}
+het <- igmi_heterogeneity(studies, w)
+
+ee <- metafor::rma(yi = yi, sei = sei, method = "EE")  # Q, Higgins-Thompson
+dl <- metafor::rma(yi = yi, sei = sei, method = "DL")  # DerSimonian-Laird
+
+knitr::kable(
+  data.frame(
+    quantity = c("heterogeneity index", "between-study variance"),
+    gtmeta = c(het$I_F2, het$tr_T_hat),
+    classical = c(max(0, (ee$QE - (length(yi) - 1)) / ee$QE), dl$tau2),
+    row.names = c("I_F^2  =  I^2", "tr T_hat  =  tau^2_DL")
+  ),
+  digits = 10
+)
+```
+
+The agreement is exact (to machine precision), not asymptotic: the
+scalar Bures--Wasserstein geometry *re-derives* Higgins--Thompson I^2 and
+the DerSimonian--Laird estimator.
+
+## Inference
+
+Three routes to a confidence statement, in increasing order of
+assumptions dropped:
+
+- `igmi_location_ci()` --- exact chi-square region treating the study
+  covariances as known (no heterogeneity);
+- `igmi_pivot_ci()` --- exact studentized t (Hotelling for m > 1)
+  interval via the Frechet scatter, valid at every K under proportional
+  total covariances; no tau^2 estimate is ever plugged in;
+- `igmi_bootstrap()` --- nonparametric study resampling.
+
+```{r inference}
+loc  <- igmi_location_ci(studies, w)
+piv  <- igmi_pivot_ci(studies, w)
+set.seed(1)
+boot <- igmi_bootstrap(studies, w, B = 500)
+
+rbind(location = loc$ci, pivot = piv$ci, bootstrap = as.numeric(boot$theta_ci))
+```
+
+```{r fig-ci, echo = FALSE, fig.height = 3, fig.alt = "Horizontal segments comparing four 95 percent confidence intervals: location, pivot, bootstrap, and the classical DL Wald interval."}
+igmi_par(mar = c(4.2, 8.2, 1.6, 1))
+cis <- rbind(
+  location  = loc$ci,
+  pivot     = piv$ci,
+  bootstrap = as.numeric(boot$theta_ci),
+  `DL Wald` = c(dl$ci.lb, dl$ci.ub)
+)
+cols <- igmi[c("green", "violet", "aqua", "amber")]
+ys <- nrow(cis):1
+plot(NA, xlim = range(cis, 0), ylim = c(0.5, nrow(cis) + 0.5),
+     xlab = "effect size", ylab = "", yaxt = "n")
+axis(2, at = ys, labels = rownames(cis), tick = FALSE,
+     col.axis = igmi[["muted"]], cex.axis = 0.9)
+abline(v = 0, col = igmi[["line"]], lwd = 1.2)
+abline(v = fit$theta, col = igmi[["faint"]], lty = 3)
+segments(cis[, 1], ys, cis[, 2], ys, col = cols, lwd = 3)
+points(rep(fit$theta, 3), ys[1:3], pch = 18, col = cols[1:3], cex = 1.3)
+points(dl$b, ys[4], pch = 18, col = cols[4], cex = 1.3)
+```
+
+The pivot interval is the one to reach for by default: it is exact at
+every study count and, unlike Hartung--Knapp--Sidik--Jonkman as usually
+presented, needs no between-study variance estimate at all.
+
+## Diagnostic test accuracy and the SROC curve
+
+A 2x2 diagnostic study becomes a *bivariate* Gaussian on the (logit
+sensitivity, logit specificity) plane. Because sensitivity and
+specificity come from disjoint patient groups, the within-study
+covariance is exactly diagonal --- the within-study correlation that
+primary reports never provide is 0 *by design*, not a plug-in guess.
+
+```{r dta}
+tp <- c(80, 60, 90, 45, 30); fn <- c(20, 15, 10,  5,  4)
+fp <- c(10, 25,  5, 12,  8); tn <- c(90, 75, 95, 88, 92)
+
+dta <- igmi_dta_studies(tp = tp, fn = fn, fp = fp, tn = tn)
+dta_studies <- lapply(dta, function(s) igmi_gaussian(s$theta, s$Sigma))
+
+dta_fit <- bw_barycenter(dta_studies)
+dta_fit$theta
+plogis(dta_fit$theta)          # summary sensitivity and specificity
+```
+
+The between-study covariance comes from the matrix method-of-moments
+estimator, and the summary ROC curve is read directly off the pooled
+Gaussian --- by construction it coincides with the Reitsma bivariate-model
+SROC at the same parameters:
+
+```{r sroc}
+T_hat <- igmi_mm_cov(dta_studies)$T_hat
+sr <- igmi_sroc(dta_fit, T_hat)
+attr(sr, "summary_point")
+```
+
+```{r fig-dta, echo = FALSE, fig.width = 8, fig.height = 4.1, fig.alt = "Left: blue per-study covariance ellipses with the green pooled barycenter ellipse in logit space. Right: ROC plane with study points, the green SROC curve, and the summary operating point."}
+igmi_par(mfrow = c(1, 2), mar = c(4.2, 4.4, 2.4, 1))
+# (i) logit-space ellipses: the R-generated echo of the hero diagram
+th <- t(vapply(dta, `[[`, numeric(2), "theta"))
+plot(NA, xlim = range(th[, 2]) + c(-1, 1), ylim = range(th[, 1]) + c(-1, 1),
+     xlab = "logit specificity", ylab = "logit sensitivity",
+     main = "studies and barycenter")
+for (s in dta) {
+  e <- ellipse_xy(s$theta[c(2, 1)], s$Sigma[c(2, 1), c(2, 1)], r = 1.4)
+  polygon(e, col = alpha(igmi[["blue"]], 0.08), border = igmi[["blue"]], lwd = 1.4)
+}
+points(th[, 2], th[, 1], pch = 16, col = igmi[["blue"]], cex = 0.8)
+eb <- ellipse_xy(dta_fit$theta[c(2, 1)], dta_fit$Sigma[c(2, 1), c(2, 1)], r = 1.4)
+polygon(eb, col = alpha(igmi[["green"]], 0.20), border = igmi[["green"]], lwd = 2.4)
+points(dta_fit$theta[2], dta_fit$theta[1], pch = 16, col = igmi[["green"]], cex = 1.1)
+
+# (ii) ROC plane
+sens_i <- (tp + 0.0) / (tp + fn); fpr_i <- fp / (fp + tn)
+plot(NA, xlim = c(0, 1), ylim = c(0, 1), xlab = "false positive rate",
+     ylab = "sensitivity", main = "summary ROC")
+abline(0, 1, col = igmi[["line"]], lwd = 1.2)
+lines(sr$fpr, sr$tpr, col = igmi[["green"]], lwd = 2.4)
+points(fpr_i, sens_i, pch = 16, col = igmi[["blue"]], cex = 1)
+sp <- attr(sr, "summary_point")
+points(1 - sp[["spec"]], sp[["sens"]], pch = 18, col = igmi[["green"]], cex = 1.8)
+```
+
+## The Wasserstein--Fisher--Rao robustness dial
+
+Unbalanced transport may *destroy* mass rather than move it. For the WFR
+pool this becomes a single robustness tuning constant: a length scale
+`delta` such that a study farther than pi * delta from the consensus
+stops counting entirely. The one-atom WFR Frechet mean is exactly the
+Andrews-sine redescending M-estimator, and as `delta -> Inf` it recovers
+the fixed-effect mean --- the dial interpolates from classical pooling to
+full outlier rejection. (This section uses the pure-R solver; the
+optional Python bridge is never needed.)
+
+```{r wfr}
+set.seed(21)
+dat <- sim_contaminated(k = 12, mu = 0.3, eps = 0.25, shift = 3)
+dat[dat$is_outlier, c("yi", "sei")]
+
+robust <- wfr_pool(dat$yi, dat$sei, delta = 0.5)
+c(estimate = robust$estimate, se = robust$se,
+  mass_ratio = robust$mass_ratio, n_active = robust$n_active)
+
+naive <- wfr_pool(dat$yi, dat$sei, delta = Inf)   # = fixed effect
+c(robust = robust$estimate, naive = naive$estimate, truth = 0.3)
+```
+
+The retained-mass fraction `mass_ratio` is a built-in contamination
+diagnostic: mass is reported as destroyed, never silently renormalised.
+
+```{r fig-wfr, echo = FALSE, fig.width = 8, fig.height = 4, fig.alt = "Left: the WFR pooled estimate as a function of delta in violet, approaching the amber fixed-effect limit. Right: the Andrews-sine influence function with the rejection point at pi delta marked."}
+igmi_par(mfrow = c(1, 2), mar = c(4.2, 4.4, 2.4, 1))
+# (i) estimate path over the delta dial
+deltas <- exp(seq(log(0.08), log(8), length.out = 40))
+path <- vapply(deltas, function(d) wfr_pool(dat$yi, dat$sei, delta = d)$estimate,
+               numeric(1))
+plot(deltas, path, type = "l", log = "x", col = igmi[["violet"]], lwd = 2.4,
+     xlab = expression(delta ~ "(log scale)"), ylab = "pooled estimate",
+     main = "the robustness dial",
+     ylim = range(path, naive$estimate, 0.3))
+abline(h = naive$estimate, col = igmi[["amber"]], lty = 2, lwd = 1.6)
+abline(h = 0.3, col = igmi[["faint"]], lty = 3)
+text(deltas[2], naive$estimate, "fixed-effect limit", adj = c(0, -0.6),
+     col = igmi[["amber"]], cex = 0.85, family = "serif")
+text(deltas[2], 0.3, "truth", adj = c(0, -0.6),
+     col = igmi[["muted"]], cex = 0.85, family = "serif")
+
+# (ii) Andrews-sine influence function, rejection point pi * delta
+d0 <- 0.5
+u <- seq(-3.2, 3.2, length.out = 400)
+psi <- ifelse(abs(u) <= pi * d0, sin(u / (2 * d0)), 0)
+plot(u, psi, type = "l", col = igmi[["violet"]], lwd = 2.4,
+     xlab = "residual u", ylab = expression(psi(u)),
+     main = expression("influence, " * delta == 0.5))
+abline(h = 0, col = igmi[["line"]], lwd = 1.2)
+abline(v = c(-1, 1) * pi * d0, col = igmi[["faint"]], lty = 3)
+text(pi * d0, 0.15, expression(pi * delta), adj = -0.3,
+     col = igmi[["muted"]], cex = 0.95)
+```
+
+## Classical benchmarks
+
+The classical estimators ship alongside the geometric ones, so every
+comparison in this vignette can be reproduced without leaving the
+package:
+
+```{r benchmarks}
+bm <- benchmark_models(yi, sei)
+knitr::kable(bm[, c("model", "estimate", "se", "ci.lb", "ci.ub",
+                    "scale_par", "scale", "AIC", "BIC")],
+             digits = 4, row.names = FALSE)
+```
+
+And the headline reduction, stated as code:
+
+```{r reduction}
+all.equal(unname(fit$theta), bm$estimate[bm$model == "FE"])
+```
+
+## Where to go next
+
+- **Bures--Wasserstein** (`bw_barycenter()`) is the closed-form default;
+  its barycenter mean is the fixed-effect estimate.
+- **Fisher--Rao** (`fr_mean()`, `fr_karcher_check()`) is reported within
+  its proven uniqueness region.
+- **Wasserstein--Fisher--Rao** (`wfr_pool()`) turns unbalanced transport
+  into a principled robustness dial.
+
+Multivariate pooling (`igmi_studies(theta = , Sigma = )`), prediction-model
+meta-analysis (`igmi_pred_studies()`), simulation generators
+(`sim_meta()`, `sim_multivariate()`, `sim_network()`), and Cochrane-style
+data adapters (`cochrane_tidy()`, `igmi_study_list()`) follow the same
+pattern: build Gaussian study objects, choose a geometry, pool.
+
+Every estimator here is anchored to a numbered theorem and tested against
+it in `tests/testthat/` --- the test suite is the package's second
+vignette.

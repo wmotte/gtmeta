@@ -1,0 +1,139 @@
+/* IGMI design system — ported from the gtmeta graphical abstract. */
+
+:root{
+  --paper:#fbfcf9; --panel:#ffffff; --panel-2:#f3f7f1;
+  --ink:#15211b; --muted:#54635b; --faint:#7d8b82; --line:#e5e9e2;
+  --igmi:#1b774f; --violet:#6a45a4; --blue:#2f6fb0; --aqua:#2c978e; --amber:#b3831c;
+  --shadow:rgba(20,45,32,.10);
+  --serif:"Palatino Linotype","Book Antiqua",Palatino,"URW Palladio L",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#0d1411; --panel:#111a16; --panel-2:#0f1713;
+    --ink:#eaf0ea; --muted:#98a89e; --faint:#78897e; --line:#20302a;
+    --igmi:#40b083; --violet:#a380e6; --blue:#5f9bd8; --aqua:#46c2b8; --amber:#dcb052;
+    --shadow:rgba(0,0,0,.38);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0d1411; --panel:#111a16; --panel-2:#0f1713;
+  --ink:#eaf0ea; --muted:#98a89e; --faint:#78897e; --line:#20302a;
+  --igmi:#40b083; --violet:#a380e6; --blue:#5f9bd8; --aqua:#46c2b8; --amber:#dcb052;
+  --shadow:rgba(0,0,0,.38);
+}
+:root[data-theme="light"]{
+  --paper:#fbfcf9; --panel:#ffffff; --panel-2:#f3f7f1;
+  --ink:#15211b; --muted:#54635b; --faint:#7d8b82; --line:#e5e9e2;
+  --igmi:#1b774f; --violet:#6a45a4; --blue:#2f6fb0; --aqua:#2c978e; --amber:#b3831c;
+  --shadow:rgba(20,45,32,.10);
+}
+
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{
+  margin:0 auto; max-width:880px;
+  padding:clamp(24px,5vw,64px) clamp(18px,4vw,40px);
+  background:var(--paper); color:var(--ink);
+  font-family:var(--sans); font-size:1.02rem; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---- title block (pandoc theme = NULL emits these classes) ---- */
+.eyebrow{
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--igmi); font-weight:600; margin:0 0 .9rem;
+}
+h1.title{
+  font-family:var(--serif); font-weight:600; text-wrap:balance;
+  font-size:clamp(1.9rem,4.4vw,3rem); line-height:1.08;
+  letter-spacing:-.01em; margin:0 0 .5rem; color:var(--ink);
+}
+h3.subtitle{
+  font-family:var(--serif); font-style:italic; font-weight:400;
+  color:var(--muted); font-size:clamp(1.05rem,2.2vw,1.35rem); margin:0 0 .8rem;
+}
+h4.author,h4.date{
+  font-family:var(--mono); font-weight:400; font-size:.8rem;
+  letter-spacing:.08em; color:var(--faint); margin:.15rem 0;
+}
+
+/* ---- headings & text ---- */
+h1,h2,h3,h4{font-family:var(--serif); font-weight:600; color:var(--ink); text-wrap:balance}
+h2{font-size:1.5rem; margin:2.6rem 0 .8rem; padding-top:1.4rem; border-top:1px solid var(--line)}
+h3{font-size:1.15rem; margin:1.8rem 0 .6rem}
+p{margin:.9rem 0}
+b,strong{font-weight:600}
+a{color:var(--igmi); text-decoration-color:color-mix(in srgb,var(--igmi) 45%,transparent)}
+a:hover{text-decoration-color:var(--igmi)}
+hr{border:0; height:1px; background:var(--line); margin:2.2rem 0}
+ul,ol{padding-left:1.4rem}
+li{margin:.3rem 0}
+li::marker{color:var(--igmi)}
+
+/* ---- table of contents ---- */
+#TOC{
+  background:var(--panel-2); border:1px solid var(--line); border-radius:5px;
+  padding:1rem 1.3rem; margin:1.8rem 0; font-size:.92rem;
+}
+#TOC::before{
+  content:"Contents"; display:block; font-family:var(--mono); font-size:.68rem;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--faint);
+  margin-bottom:.5rem; font-weight:600;
+}
+#TOC ul{list-style:none; margin:0; padding-left:0}
+#TOC ul ul{padding-left:1.1rem}
+#TOC li{margin:.2rem 0}
+#TOC a{text-decoration:none; color:var(--ink)}
+#TOC a:hover{color:var(--igmi)}
+
+/* ---- code ---- */
+code{font-family:var(--mono); font-size:.88em}
+p code,li code{
+  background:var(--panel-2); border:1px solid var(--line);
+  border-radius:3px; padding:.08em .32em; color:var(--ink);
+}
+pre{
+  background:var(--panel-2); border:1px solid var(--line); border-radius:5px;
+  padding:.85rem 1rem; overflow-x:auto; line-height:1.5; font-size:.86rem;
+  box-shadow:0 1px 0 var(--shadow);
+}
+pre code{background:none; border:0; padding:0}
+pre:not([class]){background:var(--panel); color:var(--muted)} /* chunk output */
+
+/* pygments token classes -> palette */
+.sourceCode .kw,.sourceCode .cf{color:var(--violet); font-weight:600}
+.sourceCode .fu{color:var(--igmi)}
+.sourceCode .st{color:var(--aqua)}
+.sourceCode .dv,.sourceCode .fl,.sourceCode .cn{color:var(--amber)}
+.sourceCode .co{color:var(--faint); font-style:italic}
+.sourceCode .sc,.sourceCode .ot,.sourceCode .op{color:var(--muted)}
+.sourceCode .at{color:var(--blue)}
+
+/* ---- tables ---- */
+table{border-collapse:collapse; margin:1.2rem auto; font-size:.92rem; font-variant-numeric:tabular-nums}
+th{
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--muted); font-weight:600;
+  border-bottom:1.5px solid var(--line); padding:.45rem .8rem; text-align:left;
+}
+td{border-bottom:1px solid var(--line); padding:.45rem .8rem}
+tr:last-child td{border-bottom:1.5px solid var(--line)}
+
+/* ---- figures: light panel cards in both modes ---- */
+img{
+  max-width:100%; height:auto;
+  background:#fbfcf9; border:1px solid var(--line); border-radius:5px;
+  padding:10px; box-shadow:0 1px 0 var(--shadow);
+}
+#igmi-hero{background:var(--panel)}
+
+/* ---- colophon (footer include) ---- */
+.colophon{
+  display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap;
+  align-items:baseline; color:var(--muted); font-size:.86rem;
+  margin-top:2.5rem; padding-top:1.2rem; border-top:1px solid var(--line);
+}
+.colophon .pkg{font-family:var(--mono); color:var(--ink)}
+.colophon .pkg b{color:var(--igmi)}
