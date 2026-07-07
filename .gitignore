@@ -27,3 +27,7 @@ __pycache__/
 .DS_Store
 .vscode/
 .idea/
+
+# Reproducibility script outputs (regenerable from sim/ and emp/ scripts)
+sim/results/
+emp/results/
