@@ -122,12 +122,26 @@ for (nm in DATASETS) {
   sens_bw <- stats::plogis(bary$theta[1]); spec_bw <- stats::plogis(bary$theta[2])
   sens_r <- stats::plogis(co_r[1]); spec_r <- stats::plogis(-co_r[2])
 
-  # IGMI SROC (theta_bar, T_hat) -- Def 8.7; store for the figure
+  # SROC curves for the figure. Both are the Def 8.7 conditional-mean line
+  # (Prop 8.8): IGMI at the moment covariance Th, Reitsma at the REML
+  # covariance fit_r$Psi, so they share functional form and differ only
+  # through the covariance estimator. mada stores Psi in (tsens, tfpr) =
+  # (logit Se, logit FPR = -logit Sp) coordinates; convert to (Se, Sp)
+  # order. mada::sroc() defaults to the Rutter-Gatsonis curve (a different
+  # functional form) and is kept only as reitsma_sroc_rg for reference.
+  reitsma_cm <- if (is.null(fit_r)) NULL else tryCatch({
+    Psi <- fit_r$Psi
+    mu_r <- c(co_r[1], -co_r[2])                         # (logit Se, logit Sp)
+    T_r <- matrix(c(Psi[1, 1], -Psi[1, 2],
+                    -Psi[1, 2], Psi[2, 2]), 2, 2)        # cov in (Se, Sp) order
+    igmi_sroc(mu_r, T_r)
+  }, error = function(e) NULL)
   sroc_store[[nm]] <- list(
     points = data.frame(fpr = 1 - stats::plogis(Y[, 2]),
                         sens = stats::plogis(Y[, 1])),
     igmi = igmi_sroc(bary, Th),
-    reitsma_sroc = if (is.null(fit_r)) NULL else
+    reitsma_cm = reitsma_cm,
+    reitsma_sroc_rg = if (is.null(fit_r)) NULL else
       tryCatch(as.data.frame(mada::sroc(fit_r)), error = function(e) NULL),
     summary_igmi = c(sens = sens_bw, spec = spec_bw),
     summary_reitsma = c(sens = sens_r, spec = spec_r))
