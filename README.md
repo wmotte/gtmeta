@@ -4,6 +4,10 @@
 
 The package is deliberately conservative: geometric estimators are checked against familiar meta-analytic limits where those limits exist. In the scalar fixed-variance case, the Bures-Wasserstein mean reduces to the fixed-effect estimator; the Frechet-variance calibration recovers standard heterogeneity quantities; and the Wasserstein-Fisher-Rao pool gives a robust redescending estimator with a transparent cutoff.
 
+<p align="center">
+  <img src="man/figures/graphical_abstract.png" alt="Graphical abstract: meta-analysis as a barycenter of study distributions" width="700">
+</p>
+
 ## Installation
 
 ```r
@@ -15,7 +19,7 @@ For local development from this directory:
 
 ```sh
 R CMD build .
-R CMD check --no-manual gtmeta_0.0.0.9000.tar.gz
+R CMD check --no-manual gtmeta_0.1.0.tar.gz
 ```
 
 The core package depends on base R and `metafor`. Optional comparators and bridge packages are in `Suggests`:
@@ -71,7 +75,7 @@ Run the unit tests through R CMD check:
 
 ```sh
 R CMD build .
-R CMD check --no-manual gtmeta_0.0.0.9000.tar.gz
+R CMD check --no-manual gtmeta_0.1.0.tar.gz
 ```
 
 For a smaller smoke gate that sources the package code directly:

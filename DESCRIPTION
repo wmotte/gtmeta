@@ -1,7 +1,7 @@
 Package: gtmeta
 Type: Package
 Title: Information-Geometric Tools for Meta-Analysis
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R:
     person("Willem M.", "Otte", email = "w.m.otte@umcutrecht.nl",
            role = c("aut", "cre"),
