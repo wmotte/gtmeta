@@ -5,7 +5,7 @@
 The package is deliberately conservative: geometric estimators are checked against familiar meta-analytic limits where those limits exist. In the scalar fixed-variance case, the Bures-Wasserstein mean reduces to the fixed-effect estimator; the Frechet-variance calibration recovers standard heterogeneity quantities; and the Wasserstein-Fisher-Rao pool gives a robust redescending estimator with a transparent cutoff.
 
 <p align="center">
-  <img src="man/figures/graphical_abstract.png" alt="Graphical abstract: meta-analysis as a barycenter of study distributions" width="700">
+  <img src="man/figures/graphical_abstract.png" alt="Meta-analysis as a barycenter of study distributions: each study is a Gaussian, the pooled estimate is their Frechet mean" width="420">
 </p>
 
 ## Installation
@@ -88,4 +88,4 @@ Some checks that use real external corpora or optional Python optimal-transport 
 
 ## License
 
-GPL-3. See `LICENSE.md`.
+GPL-3. The full license text is in [LICENSE.md](LICENSE.md).
