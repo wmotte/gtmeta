@@ -18,3 +18,5 @@
 ^docs$
 ^gtmeta\.Rcheck$
 ^gtmeta_.*\.tar\.gz$
+^cran-comments\.md$
+^_cran_communication$

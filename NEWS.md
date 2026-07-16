@@ -1,3 +1,18 @@
+# gtmeta 0.1.1
+
+CRAN resubmission; changes requested by the CRAN review of 0.1.0.
+
+* DESCRIPTION: spell out the FE, RE, and UWLS acronyms and add method
+  references with DOIs (Agueh and Carlier 2011; Chizat, Peyre, Schmitzer,
+  and Vialard 2018; DerSimonian and Laird 1986; Stanley and Doucouliagos
+  2015).
+* Document return values (`\value`) for `metric_mse()` and
+  `metric_ci_width()`.
+* `wfr_setup()` now asks for confirmation before creating the virtualenv
+  and installing the pinned Python packages (interactive prompt, or
+  `confirm = TRUE` in non-interactive sessions), and its documentation
+  states explicitly that it installs software.
+
 # gtmeta 0.1.0
 
 First release.

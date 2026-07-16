@@ -11,6 +11,10 @@ metric_mse(est, truth)
 
 \item{truth}{True value (scalar or vector like \code{est}).}
 }
+\value{
+A single numeric value: the mean of the squared errors
+\code{(est - truth)^2}.
+}
 \description{
 Mean squared error over replications
 }

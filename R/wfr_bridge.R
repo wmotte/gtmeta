@@ -19,20 +19,47 @@ wfr_py_deps <- function() {
 
 .wfr_envname <- "r-gtmeta"
 
-#' Create (or update) the pinned Python environment for WFR
+#' Install the pinned Python dependencies for the WFR bridge
 #'
-#' Creates a reticulate virtualenv with the exact versions of
-#' [wfr_py_deps()]. Requires a system `python3`.
+#' This function installs software on the user's system: it creates a
+#' reticulate virtualenv (named `r-gtmeta` by default) and installs the
+#' exact Python package versions of [wfr_py_deps()] into it. Requires a
+#' system `python3`.
+#'
+#' Nothing is installed unless the user explicitly consents: in an
+#' interactive session the function asks for confirmation first, and in
+#' a non-interactive session it stops unless called with
+#' `confirm = TRUE`. It is never called by the package itself, its
+#' examples, tests, or vignette.
 #'
 #' @param envname Virtualenv name.
-#' @return The environment name, invisibly.
+#' @param confirm Set to `TRUE` to consent to the installation without
+#'   the interactive prompt (required in non-interactive sessions).
+#' @return The environment name, invisibly. Called for its side effect
+#'   of creating the virtualenv and installing the pinned Python
+#'   packages into it.
 #' @export
-wfr_setup <- function(envname = .wfr_envname) {
+wfr_setup <- function(envname = .wfr_envname, confirm = FALSE) {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
     stop("wfr_setup() needs the 'reticulate' package")
   }
   deps <- wfr_py_deps()
   pkgs <- paste0(names(deps), "==", deps)
+  if (!isTRUE(confirm)) {
+    if (!interactive()) {
+      stop("wfr_setup() installs Python packages (",
+           paste(pkgs, collapse = ", "),
+           ") into the '", envname, "' virtualenv. ",
+           "Call wfr_setup(confirm = TRUE) to consent.")
+    }
+    ok <- utils::askYesNo(paste0(
+      "Create virtualenv '", envname, "' and install ",
+      paste(pkgs, collapse = ", "), "?"))
+    if (!isTRUE(ok)) {
+      message("Installation cancelled.")
+      return(invisible(envname))
+    }
+  }
   if (!reticulate::virtualenv_exists(envname)) {
     reticulate::virtualenv_create(envname)
   }

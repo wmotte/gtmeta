@@ -2,17 +2,31 @@
 % Please edit documentation in R/wfr_bridge.R
 \name{wfr_setup}
 \alias{wfr_setup}
-\title{Create (or update) the pinned Python environment for WFR}
+\title{Install the pinned Python dependencies for the WFR bridge}
 \usage{
-wfr_setup(envname = .wfr_envname)
+wfr_setup(envname = .wfr_envname, confirm = FALSE)
 }
 \arguments{
 \item{envname}{Virtualenv name.}
+
+\item{confirm}{Set to \code{TRUE} to consent to the installation without
+the interactive prompt (required in non-interactive sessions).}
 }
 \value{
-The environment name, invisibly.
+The environment name, invisibly. Called for its side effect
+of creating the virtualenv and installing the pinned Python
+packages into it.
 }
 \description{
-Creates a reticulate virtualenv with the exact versions of
-\code{\link[=wfr_py_deps]{wfr_py_deps()}}. Requires a system \code{python3}.
+This function installs software on the user's system: it creates a
+reticulate virtualenv (named \code{r-gtmeta} by default) and installs the
+exact Python package versions of \code{\link[=wfr_py_deps]{wfr_py_deps()}} into it. Requires a
+system \code{python3}.
+}
+\details{
+Nothing is installed unless the user explicitly consents: in an
+interactive session the function asks for confirmation first, and in
+a non-interactive session it stops unless called with
+\code{confirm = TRUE}. It is never called by the package itself, its
+examples, tests, or vignette.
 }

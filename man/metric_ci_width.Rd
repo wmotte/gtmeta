@@ -9,6 +9,10 @@ metric_ci_width(lo, hi)
 \arguments{
 \item{lo, hi}{Interval bounds per replication.}
 }
+\value{
+A single numeric value: the mean of the interval widths
+\code{hi - lo}.
+}
 \description{
 Mean interval width
 }

@@ -14,6 +14,8 @@ metric_bias <- function(est, truth) mean(est - truth)
 
 #' Mean squared error over replications
 #' @inheritParams metric_bias
+#' @return A single numeric value: the mean of the squared errors
+#'   `(est - truth)^2`.
 #' @export
 metric_mse <- function(est, truth) mean((est - truth)^2)
 
@@ -26,6 +28,8 @@ metric_coverage <- function(lo, hi, truth) mean(lo <= truth & truth <= hi)
 
 #' Mean interval width
 #' @param lo,hi Interval bounds per replication.
+#' @return A single numeric value: the mean of the interval widths
+#'   `hi - lo`.
 #' @export
 metric_ci_width <- function(lo, hi) mean(hi - lo)
 

@@ -1,7 +1,7 @@
 Package: gtmeta
 Type: Package
 Title: Information-Geometric Tools for Meta-Analysis
-Version: 0.1.0
+Version: 0.1.1
 Authors@R:
     person("Willem M.", "Otte", email = "w.m.otte@umcutrecht.nl",
            role = c("aut", "cre"),
@@ -13,8 +13,14 @@ Description: Implements information-geometric meta-integration (IGMI) for
     prediction-model study objects; Bures-Wasserstein barycenters;
     Fisher-Rao distances and Karcher checks; Frechet-variance
     heterogeneity measures; exact and bootstrap inference tools;
-    robust Wasserstein-Fisher-Rao pooling; classical FE, RE, and UWLS
+    robust Wasserstein-Fisher-Rao pooling; classical fixed-effect (FE),
+    random-effects (RE), and unrestricted weighted least squares (UWLS)
     benchmarks; simulation generators; and Cochrane-style data adapters.
+    Methods are described in Agueh and Carlier (2011)
+    <doi:10.1137/100805741>, Chizat, Peyre, Schmitzer, and Vialard (2018)
+    <doi:10.1007/s10208-016-9331-y>, DerSimonian and Laird (1986)
+    <doi:10.1016/0197-2456(86)90046-2>, and Stanley and Doucouliagos
+    (2015) <doi:10.1002/sim.6481>.
 License: GPL-3
 URL: https://github.com/wmotte/gtmeta
 BugReports: https://github.com/wmotte/gtmeta/issues
